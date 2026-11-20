@@ -15,21 +15,12 @@ Linux CLI를 통해 파일·디렉터리와 접근 권한을 관리하고, Docke
 | 항목 | 환경 |
 |---|---|
 | OS | Windows 10 |
-| Linux | WSL2 Ubuntu |
+| Linux | WSL2 Ubuntu 26.04.1 LTS |
 | IDE | Visual Studio Code |
-| Container | Docker |
-| Web Server | NGINX |
-| Version Control | Git / GitHub |
+| Container | Docker 29.9.3 |
+| Web Server | NGINX 1.27 |
+| Version Control | Git 2.53.0 / GitHub |
 | Project Path | `~/codyssey/workstation-lab` |
-
-**버전 확인**
-
-```bash
-cat /etc/os-release
-docker --version
-docker info
-git --version
-```
 
 ### 프로젝트 파일 구조 및 역할 (평가 #10)
 
@@ -103,6 +94,9 @@ ls -ld permission-dir
 
 Linux 권한은 **소유자(User) / 그룹(Group) / 기타 사용자(Others)** 순서로 표기한다. 읽기 `r=4`, 쓰기 `w=2`, 실행 `x=1`을 더하여 각 자리의 숫자를 만든다. 파일의 `x`는 실행, 디렉터리의 `x`는 내부 경로에 진입·탐색할 수 있는 권한을 의미한다.
 
+- `r`: 읽기(4), `w`: 쓰기(2), `x`: 실행(1)
+- 숫자 표기는 `소유자 / 그룹 / 기타 사용자` 순서
+
 | 명령 | 계산 | 결과 문자열의 권한 부분 |
 |---|---|---|
 | `chmod 600 permission.txt` | 소유자 4+2, 그룹 0, 기타 0 | `rw-------` |
@@ -113,13 +107,12 @@ Linux 권한은 **소유자(User) / 그룹(Group) / 기타 사용자(Others)** �
 **실습 결과 — 권한 변경 확인 (평가 #2)**
 ![chmod 권한 변경 실습](docs/screenshots/2.%20chmod%20%ED%8C%8C%EC%9D%BC%20%EB%B0%8F%20%EB%94%94%EB%A0%89%ED%84%B0%EB%A6%AC%20%EA%B6%8C%ED%95%9C%20%EB%B3%80%EA%B2%BD.PNG)
 
-위 권한 문자열은 기대값이며, 소유자·날짜·크기 등 실제 출력은 사용자 환경에서 확인해 기록한다.
-
 
 ## 5. Docker 설치 및 실행 상태 확인
 
 ```bash
 docker --version
+docker compose version
 docker info
 ```
 
@@ -161,7 +154,6 @@ docker stats --no-stream
 
 바인드 마운트로 연결된 파일은 예외적으로 이미지 재빌드 없이 변경 내용이 반영될 수 있다. `docker exec`는 실행 중인 컨테이너에 명령을 실행하고, `docker logs`는 프로세스 출력을 확인한다.
 
-
 **실습 결과**
 ![hello-world 이미지 실행](docs/screenshots/4.%20hello-world%20%EC%9D%B4%EB%AF%B8%EC%A7%80%20%EC%8B%A4%ED%96%89.PNG)
 ![hello-world 실행 후 컨테이너 상태](docs/screenshots/5.%20Docker%20hello-world%20%EB%AA%A9%EB%A1%9D%20%EB%B0%8F%20%EC%A2%85%EB%A3%8C%20%ED%99%95%EC%9D%B8.PNG)
@@ -170,6 +162,11 @@ docker stats --no-stream
 ![Ubuntu 컨테이너 내부 명령어 1](docs/screenshots/6.%20%EC%BB%A8%ED%85%8C%EC%9D%B4%EB%84%88%20%EB%82%B4%EB%B6%80%20%EC%8B%A4%EC%8A%B5.PNG)
 ![Ubuntu 컨테이너 내부 명령어 2](docs/screenshots/6.%20%EC%BB%A8%ED%85%8C%EC%9D%B4%EB%84%88%20%EB%82%B4%EB%B6%80%20%EC%8B%A4%EC%8A%B5_2.PNG)
 ![컨테이너 상태 및 리소스 확인](docs/screenshots/7.%20%EC%BB%A8%ED%85%8C%EC%9D%B4%EB%84%88%EC%9D%98%20%EC%83%81%ED%83%9C%20%EB%B0%8F%20%EC%9E%90%EC%9B%90%20%ED%99%95%EC%9D%B8.PNG)
+
+## exec / attach 의 의미와 비교
+
+| exec | 새 프로세스를 만들어 명령을 실행 | 셸이나 명령을 종료해도 컨테이너는 계속 실행 |
+| attach | 실행 중인 컨테이너의 기존 메인 프로세스 표준 입출력에 직접 연결 | exit 등으로 연결을 끊거나 주 프로세스가 종료되면 컨테이너도 함께 멈출 수 있음 |
 
 ## 7. Dockerfile 기반 NGINX 이미지 제작
 
@@ -184,6 +181,12 @@ COPY site/ /usr/share/nginx/html/
 EXPOSE 80
 ```
 
+| FROM nginx:1.27-alpine | nginx 웹 서버의 1.27 버전 중 가벼운 Alpine Linux 기반 이미지를 지정 |
+| LABEL description="WSL2 Docker workstation assignment" | 이미지에 설명 같은 메타데이터를 키-값(key=value) 형태로 출력 |
+| COPY site/ /usr/share/nginx/html/ | site/ 디렉터리 안 파일들을 이미지 내부의 /usr/share/nginx/html/ 경로로 복사 |
+| EXPOSE 80 | 컨테이너 내부 프로세스가 80번 포트를 사용한다는 의도를 문서화(메타데이터 기록) |
+
+
 **빌드 명령**
 
 ```bash
@@ -192,8 +195,6 @@ docker images
 ```
 
 **실습 결과**
-
-`FROM`은 기반 이미지, `COPY`는 웹 파일을 이미지 안으로 복사하는 명령, `EXPOSE 80`은 사용 포트를 문서화하는 메타데이터이다. `EXPOSE`만으로 호스트 포트가 열리지는 않는다.
 
 **검증 순서:** (1) `site/` 파일 확인 → (2) `docker build` 성공 → (3) `docker images`에서 `lab-nginx:1.0` 확인 → (4) 다음 절에서 컨테이너 실행.
 ![Dockerfile 작성 및 이미지 빌드](docs/screenshots/8.%20Dockerfile%EA%B3%BC%20%EB%B9%8C%EB%93%9C%20%EA%B2%B0%EA%B3%BC.PNG)
@@ -216,7 +217,7 @@ docker ps
 
 ### 네트워크 격리와 포트 포워딩 (평가 #13)
 
-Linux 컨테이너는 일반적으로 별도 **네트워크 네임스페이스**에서 동작하므로 호스트와 네트워크 인터페이스·IP·포트 공간이 분리된다. NGINX가 컨테이너 내부 `80`번 포트를 사용한다고 해서 호스트의 `80`번 포트로 자동 공개되는 것은 아니다. `-p 127.0.0.1:8088:80`은 **호스트 루프백 주소 127.0.0.1의 8088번 포트**를 **컨테이너의 80번 포트**로 게시·전달하는 설정이다.
+Linux 컨테이너는 일반적으로 별도 **네트워크 네임스페이스**에서 동작하므로 호스트와 네트워크 인터페이스·IP·포트 공간이 분리된다. NGINX가 컨테이너 내부 `80`번 포트를 사용한다고 해서 호스트의 `80`번 포트로 보이는 것은 아니다. `-p 127.0.0.1:8088:80`은 **호스트 루프백 주소 127.0.0.1의 8088번 포트**를 **컨테이너의 80번 포트**로 게시·전달하는 설정이다.
 
 ```text
 Windows 브라우저 / Ubuntu curl
@@ -232,6 +233,12 @@ lab-web-8088 컨테이너 :80 (NGINX)
 
 두 컨테이너는 모두 내부 `80`번 포트를 사용하지만 호스트에서는 서로 다른 포트(`8088`, `8081`)를 사용하여 충돌하지 않는다. `127.0.0.1`로 바인딩했기 때문에 기본적으로 로컬에서 접근하도록 제한된다.
 
+**실습 결과**
+![10. 도커 포트매핑을 통한 웹서버 생성-1](docs/screenshots/10.%20%EB%8F%84%EC%BB%A4%20%ED%8F%AC%ED%8A%B8%EB%A7%A4%ED%95%91%EC%9D%84%20%ED%86%B5%ED%95%9C%20%EC%9B%B9%EC%84%9C%EB%B2%84%20%EC%83%9D%EC%84%B1-1.PNG)
+![10. 도커 포트매핑을 통한 웹서버 생성-8088](docs/screenshots/10.%20%EB%8F%84%EC%BB%A4%20%ED%8F%AC%ED%8A%B8%EB%A7%A4%ED%95%91%EC%9D%84%20%ED%86%B5%ED%95%9C%20%EC%9B%B9%EC%84%9C%EB%B2%84%20%EC%83%9D%EC%84%B1-8088.PNG)
+![10. 도커 포트매핑을 통한 웹서버 생성-2](docs/screenshots/10.%20%EB%8F%84%EC%BB%A4%20%ED%8F%AC%ED%8A%B8%EB%A7%A4%ED%95%91%EC%9D%84%20%ED%86%B5%ED%95%9C%20%EC%9B%B9%EC%84%9C%EB%B2%84%20%EC%83%9D%EC%84%B1-2.PNG)
+![10. 도커 포트매핑을 통한 웹서버 생성-8081](docs/screenshots/10.%20%EB%8F%84%EC%BB%A4%20%ED%8F%AC%ED%8A%B8%EB%A7%A4%ED%95%91%EC%9D%84%20%ED%86%B5%ED%95%9C%20%EC%9B%B9%EC%84%9C%EB%B2%84%20%EC%83%9D%EC%84%B1-8081.PNG)
+
 ### 포트 충돌 시 진단 순서 (평가 #16)
 
 `port is already allocated` 등의 오류가 발생하면 다음 순서로 확인한다.
@@ -243,13 +250,6 @@ lab-web-8088 컨테이너 :80 (NGINX)
 5. **재검증:** `docker ps`와 `curl -I http://localhost:8090` 또는 원래 포트의 응답을 확인한다.
 
 이 절차는 **포트 충돌이 발생했을 때의 대응 방법**이며, 이번 실습에서 실제로 포트 충돌 오류가 발생했다는 뜻은 아니다.
-
-
-**실습 결과**
-![10. 도커 포트매핑을 통한 웹서버 생성-1](docs/screenshots/10.%20%EB%8F%84%EC%BB%A4%20%ED%8F%AC%ED%8A%B8%EB%A7%A4%ED%95%91%EC%9D%84%20%ED%86%B5%ED%95%9C%20%EC%9B%B9%EC%84%9C%EB%B2%84%20%EC%83%9D%EC%84%B1-1.PNG)
-![10. 도커 포트매핑을 통한 웹서버 생성-8088](docs/screenshots/10.%20%EB%8F%84%EC%BB%A4%20%ED%8F%AC%ED%8A%B8%EB%A7%A4%ED%95%91%EC%9D%84%20%ED%86%B5%ED%95%9C%20%EC%9B%B9%EC%84%9C%EB%B2%84%20%EC%83%9D%EC%84%B1-8088.PNG)
-![10. 도커 포트매핑을 통한 웹서버 생성-2](docs/screenshots/10.%20%EB%8F%84%EC%BB%A4%20%ED%8F%AC%ED%8A%B8%EB%A7%A4%ED%95%91%EC%9D%84%20%ED%86%B5%ED%95%9C%20%EC%9B%B9%EC%84%9C%EB%B2%84%20%EC%83%9D%EC%84%B1-2.PNG)
-![10. 도커 포트매핑을 통한 웹서버 생성-8081](docs/screenshots/10.%20%EB%8F%84%EC%BB%A4%20%ED%8F%AC%ED%8A%B8%EB%A7%A4%ED%95%91%EC%9D%84%20%ED%86%B5%ED%95%9C%20%EC%9B%B9%EC%84%9C%EB%B2%84%20%EC%83%9D%EC%84%B1-8081.PNG)
 
 ## 9. 바인드 마운트
 
@@ -264,9 +264,17 @@ docker run -d --name lab-bind \
 curl http://localhost:8089
 ```
 
+### 바인드 마운트란?
+
+호스트 시스템의 특정 파일이나 디렉터리를 컨테이너 내부 경로에 직접 연결해 데이터를 공유하는 방식
+
+**특징** 
+1. 실시간 동기화: 호스트에서 파일을 수정하면 컨테이너에 즉시 반영되고, 컨테이너에서 수정한 내용도 호스트에 바로 적용
+2. 경로 지정: 도커가 경로를 자동 관리하는 볼륨과 달리, 사용자가 호스트의 원하는 경로를 직접 지정
+
 ### 경로 선정 이유 (평가 #14)
 
-`$(pwd)`는 현재 작업 폴더의 **절대 경로**를 반환하므로, 반드시 프로젝트 루트에서 실행하면 `bind-site`의 위치를 명확히 지정할 수 있다. `source`는 호스트 Ubuntu의 실제 파일 폴더, `target`은 NGINX가 정적 파일을 읽는 컨테이너 경로이다. 이 경로를 정확하게 사용하고 파일 읽기 권한을 확보해야 설정을 재현할 수 있다. 바인드 마운트는 컨테이너 이미지의 대상 경로에 원래 있던 파일을 가려 보이게 할 수 있으므로 주의한다.
+`$(pwd)`는 현재 작업 폴더의 **절대 경로**를 반환하므로, 반드시 프로젝트 루트에서 실행하면 `bind-site`의 위치를 명확히 지정할 수 있다. `source`는 호스트 Ubuntu의 실제 파일 폴더, `target`은 NGINX가 정적 파일을 읽는 컨테이너 경로이다. 이 경로를 정확하게 사용하고 파일 읽기 권한을 확보해야 설정을 재현할 수 있다.
 
 **검증 순서:** (1) 변경 전 `curl`/브라우저 캡처 → (2) `bind-site/index.html` 수정 및 저장 → (3) **재빌드·재시작 없이** 동일 주소 요청 → (4) `docker inspect lab-bind --format '{{json .Mounts}}'`로 연결 경로 확인.
 
@@ -302,13 +310,21 @@ docker run -d --name lab-volume2 \
 docker exec lab-volume2 cat /data/result.txt
 ```
 
+### 볼륨이란?
+
+도커(Docker) 볼륨(Volume)은 컨테이너의 파일시스템 외부에 위치하는, 데이터를 영구적으로 저장하기 위한 특별한 메커니즘
+
+**특징** 
+1. 컨테이너가 재시작되거나 삭제되더라도 데이터를 유지할 수 있다.
+2. 여러 컨테이너 간에 손쉽게 데이터 공유가 가능하다.
+
 **실습 결과**
 ![12. 볼륨 첫번째 컨테이너 저장](docs/screenshots/12.%20%EB%B3%BC%EB%A5%A8%20%EC%B2%AB%EB%B2%88%EC%A7%B8%20%EC%BB%A8%ED%85%8C%EC%9D%B4%EB%84%88%20%EC%A0%80%EC%9E%A5.PNG)
 ![12. 볼륨 두번째 컨테이너 저장 후 실행 결과](docs/screenshots/12.%20%EB%B3%BC%EB%A5%A8%20%EB%91%90%EB%B2%88%EC%A7%B8%20%EC%BB%A8%ED%85%8C%EC%9D%B4%EB%84%88%20%EC%A0%80%EC%9E%A5%20%ED%9B%84%20%EC%8B%A4%ED%96%89%20%EA%B2%B0%EA%B3%BC.PNG)
 ![12. 볼륨 목록 및 결과](docs/screenshots/12.%20%EB%B3%BC%EB%A5%A8%20%EB%AA%A9%EB%A1%9D%20%EB%B0%8F%20%EA%B2%B0%EA%B3%BC.PNG)
 ### 볼륨 백업 및 복구 (평가 #17)
 
-볼륨은 컨테이너와 별도로 데이터를 관리하지만, **볼륨 자체를 삭제하거나 Docker 데이터 저장소를 초기화하면 데이터가 사라질 수 있어** 중요한 데이터는 백업한다. 아래는 실습용 `lab-data` 볼륨을 `backup/`에 `tar.gz`로 저장하고, 별도의 `lab-restored` 볼륨에 복구하는 예시이다. **프로젝트 루트에서 실행하며, 실제 실행 후 결과를 기록한다.**
+볼륨은 컨테이너와 별도로 데이터를 관리하지만, **볼륨 자체를 삭제하거나 Docker 데이터 저장소를 초기화하면 데이터가 사라질 수 있어** 중요한 데이터는 백업한다. 아래는 실습용 `lab-data` 볼륨을 `backup/`에 `tar.gz`로 저장하고, 별도의 `lab-restored` 볼륨에 복구하는 예시이다. 
 
 ```bash
 mkdir -p backup
