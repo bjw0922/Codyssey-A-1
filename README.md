@@ -1,4 +1,3 @@
-<img width="487" height="337" alt="1 환경" src="https://github.com/user-attachments/assets/84c142f2-d70b-4264-93de-950faa360f10" />
 # Windows 10 + WSL2 Docker 개발 워크스테이션 구축
 
 > **증거 기록 원칙:** 이 문서는 기존 제출 README를 기반으로 보완한 문서다. `[실제 ...]`로 표시된 부분은 아직 확인하지 못한 출력이므로 반드시 본인의 터미널 결과로 교체한다. 스크린샷은 `docs/screenshots/`에 실제 파일이 있을 때만 링크가 정상 표시된다.
@@ -84,7 +83,7 @@ rmdir temp-dir
 
 **실습 결과**
 
-**./docs/screenshots/1.터미널 기본 조작_1.PNG**
+****
 
 ```text
 $ pwd
