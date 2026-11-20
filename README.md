@@ -83,15 +83,11 @@ rmdir temp-dir
 
 **실습 결과**
 
+
 ****
 
-```text
-$ pwd
-[실제 작업 경로]
-$ cat original.txt
-[실제 파일 내용]
-$ ls -la
-[실제 파일 목록]
+```
+<img width="487" height="337" alt="1 환경" src="https://github.com/user-attachments/assets/262f5448-7786-4474-b1b9-c42c8450589a" />
 ```
 
 파일 생성(`touch`), 복사(`cp`), 이름 변경(`mv`), 삭제(`rm`/`rmdir`) 명령은 각각 현재 경로의 파일 상태를 바꾼다. `ls -la`와 `cat`으로 최종 상태를 확인한다.
@@ -127,15 +123,8 @@ Linux 권한은 **소유자(User) / 그룹(Group) / 기타 사용자(Others)** �
 
 **실습 결과 — 명령어 및 실제 출력 기록 (평가 #2)**
 
-```text
-$ chmod 600 permission.txt && ls -l permission.txt
-[실제 ls -l 출력 입력]
-$ chmod 700 permission-dir && ls -ld permission-dir
-[실제 ls -ld 출력 입력]
-$ chmod 644 permission.txt && ls -l permission.txt
-[실제 ls -l 출력 입력]
-$ chmod 755 permission-dir && ls -ld permission-dir
-[실제 ls -ld 출력 입력]
+```
+<img width="649" height="220" alt="2 chmod 실습" src="https://github.com/user-attachments/assets/05263bdc-a113-4b44-bfea-111cf51c4765" />
 ```
 
 위 권한 문자열은 기대값이며, 소유자·날짜·크기 등 실제 출력은 사용자 환경에서 확인해 기록한다.
