@@ -82,7 +82,13 @@ rmdir temp-dir
 ```
 
 **실습 결과**
+<<<<<<< HEAD
 
+=======
+![alt text](<a1.터미널 기본 조작_1.PNG>)
+![alt text](<a1.터미널 기본 조작_2.PNG>)
+**핵심 출력(실제 실행 후 교체)**
+>>>>>>> 94202ce (Add screenshots in README.md)
 
 ****
 
@@ -122,9 +128,22 @@ Linux 권한은 **소유자(User) / 그룹(Group) / 기타 사용자(Others)** �
 | `chmod 755 permission-dir` | 소유자 4+2+1, 그룹 4+1, 기타 4+1 | `rwxr-xr-x` |
 
 **실습 결과 — 명령어 및 실제 출력 기록 (평가 #2)**
+<<<<<<< HEAD
 
 ```
 
+=======
+![alt text](<2. chmod 파일 및 디렉터리 권한 변경.PNG>)
+```text
+$ chmod 600 permission.txt && ls -l permission.txt
+[실제 ls -l 출력 입력]
+$ chmod 700 permission-dir && ls -ld permission-dir
+[실제 ls -ld 출력 입력]
+$ chmod 644 permission.txt && ls -l permission.txt
+[실제 ls -l 출력 입력]
+$ chmod 755 permission-dir && ls -ld permission-dir
+[실제 ls -ld 출력 입력]
+>>>>>>> 94202ce (Add screenshots in README.md)
 ```
 
 위 권한 문자열은 기대값이며, 소유자·날짜·크기 등 실제 출력은 사용자 환경에서 확인해 기록한다.
@@ -139,7 +158,7 @@ docker info
 ```
 
 **실습 결과**
-
+![alt text](<3. Docker 설치·데몬 확인.PNG>)
 `docker --version`은 CLI 설치 여부를, `docker info`의 `Server`는 엔진(데몬) 연결 여부를 확인한다. CLI가 설치되어 있더라도 서버에 연결되지 않으면 컨테이너를 실행할 수 없다.
 
 ```text
@@ -186,7 +205,8 @@ docker stats --no-stream
 
 
 **실습 결과**
-
+![alt text](<4. hello-world 이미지 실행.PNG>)
+![alt text](<5. Docker hello-world 목록 및 종료 확인.PNG>)
 ```text
 $ docker logs lab-hello
 [실제 출력 중 'Hello from Docker!'가 포함된 부분]
@@ -199,7 +219,9 @@ $ docker stats --no-stream
 ```
 
 **Ubuntu 컨테이너 내부 실습:** `docker exec -it lab-ubuntu bash` 후 `pwd`, `ls -la`, `echo "Hello from Docker Ubuntu"`를 입력하고 결과를 기록한다.
-
+![alt text](<6. 컨테이너 내부 실습.PNG>)
+![alt text](<6. 컨테이너 내부 실습_2.PNG>)
+![alt text](<7. 컨테이너의 상태 및 자원 확인.PNG>)
 ```text
 [Ubuntu 컨테이너 내부 프롬프트 및 pwd / ls / echo 출력]
 ```
@@ -237,7 +259,8 @@ docker images
 `FROM`은 기반 이미지, `COPY`는 HTML/CSS를 이미지 안으로 복사하는 명령, `EXPOSE 80`은 사용 포트를 문서화하는 메타데이터이다. `EXPOSE`만으로 호스트 포트가 열리지는 않는다.
 
 **검증 순서:** (1) `site/` 파일 확인 → (2) `docker build` 성공 → (3) `docker images`에서 `lab-nginx:1.0` 확인 → (4) 다음 절에서 컨테이너 실행.
-
+![alt text](<8. Dockerfile과 빌드 결과.PNG>)
+![alt text](<9. 커스텀 이미지의 웹 서버 실행 및 목록.PNG>)
 ```text
 $ docker build --progress=plain -t lab-nginx:1.0 .
 [실제 빌드 종료 단계 및 성공 로그]
@@ -294,7 +317,10 @@ lab-web-8088 컨테이너 :80 (NGINX)
 
 
 **실습 결과**
-
+![alt text](<10. 도커 포트매핑을 통한 웹서버 생성-1.PNG>)
+![alt text](<10. 도커 포트매핑을 통한 웹서버 생성-8088.PNG>)
+![alt text](<10. 도커 포트매핑을 통한 웹서버 생성-2.PNG>)
+![alt text](<10. 도커 포트매핑을 통한 웹서버 생성-8081.PNG>)
 ```text
 $ curl -i http://localhost:8088
 [실제 HTTP 상태 줄·Server 헤더·HTML 본문 일부]
@@ -331,7 +357,10 @@ curl http://localhost:8089
 
 
 **실습 결과**
-
+![alt text](<11. 바인드 마운트용 폴더 생성.PNG>)
+![alt text](<11. 바인드 마운트 이전 웹사이트.PNG>)
+![alt text](<11. 바인드 마운트 내용 변경됨.PNG>)
+![alt text](<11. 바인드 마운트 이후 웹사이트.PNG>)
 ```text
 $ curl http://localhost:8089  # HTML 수정 전
 [실제 BEFORE 문구가 들어간 HTML 출력]
@@ -371,7 +400,9 @@ docker exec lab-volume2 cat /data/result.txt
 ```
 
 **실습 결과**
-
+![alt text](<12. 볼륨 첫번째 컨테이너 저장.PNG>)
+![alt text](<12. 볼륨 두번째 컨테이너 저장 후 실행 결과.PNG>)
+![alt text](<12. 볼륨 목록 및 결과.PNG>)
 컨테이너 삭제 전: [실제 출력]
 
 컨테이너 삭제 후: [실제 출력]
@@ -431,7 +462,9 @@ git push -u origin main
 ```
 
 **실습 결과**
-
+![alt text](<13. git 버전 및 사용자 설정.PNG>)
+![alt text](<14. git 추가 후 커밋.PNG>)
+![alt text](<14. git 업로드 완료.PNG>)  
 ```text
 $ git config --list
 [실제 user.name, user.email(공개 가능 여부 확인), init.defaultbranch 설정]
@@ -471,7 +504,7 @@ Error response from daemon: container ... is not running
 docker start lab-ubuntu
 docker exec lab-ubuntu echo "Container is running"
 ```
-
+![alt text](<15. 트래블슈터 종료된 컨테이너.PNG>)
 **결과 확인 명령:**
 
 ```bash
@@ -499,7 +532,7 @@ Conflict. The container name "/lab-ubuntu" is already in use
 docker ps -a
 docker start lab-ubuntu
 ```
-
+![alt text](<15. 트래블슈터 컨테이너 이름 중복.PNG>)
 **결과 확인 명령:**
 
 ```bash
@@ -522,7 +555,7 @@ Docker 이미지와 컨테이너의 차이를 이해하고, Dockerfile을 이용
 
 마지막으로 Git을 이용하여 프로젝트의 변경 이력을 기록하고 GitHub에 업로드하였다.
 
-**GitHub 저장소:** [최종 저장소 URL]
+**GitHub 저장소:** [[최종 저장소 URL](https://github.com/bjw0922/Codyssey-A-1)]
 
 ## 14. 최종 제출 체크리스트
 
