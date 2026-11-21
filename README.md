@@ -164,7 +164,7 @@ docker stats --no-stream
 ![컨테이너 상태 및 리소스 확인](docs/screenshots/7.%20%EC%BB%A8%ED%85%8C%EC%9D%B4%EB%84%88%EC%9D%98%20%EC%83%81%ED%83%9C%20%EB%B0%8F%20%EC%9E%90%EC%9B%90%20%ED%99%95%EC%9D%B8.PNG)
 
 ## exec / attach 의 의미와 비교
-
+|---|---|---|
 | exec | 새 프로세스를 만들어 명령을 실행 | 셸이나 명령을 종료해도 컨테이너는 계속 실행 |
 | attach | 실행 중인 컨테이너의 기존 메인 프로세스 표준 입출력에 직접 연결 | exit 등으로 연결을 끊거나 주 프로세스가 종료되면 컨테이너도 함께 멈출 수 있음 |
 
@@ -272,9 +272,22 @@ curl http://localhost:8089
 1. 실시간 동기화: 호스트에서 파일을 수정하면 컨테이너에 즉시 반영되고, 컨테이너에서 수정한 내용도 호스트에 바로 적용
 2. 경로 지정: 도커가 경로를 자동 관리하는 볼륨과 달리, 사용자가 호스트의 원하는 경로를 직접 지정
 
-### 경로 선정 이유 (평가 #14)
+### 절대경로와 상대경로의 차이
+|구분|절대경로|상대경로|
+|---|---|---|
+|기준|최상위 디렉터리 /|현재 작업 디렉터리|
+|시작형태|/로 시작|일반적으로 / 없이 시작|
+|특징|현재 위치와 관계없이 동일한 위치 지정|현재 위치에 따라 가리키는 위치가 달라짐|
+|예시|/home/bwldns/codyssey/workstation-lab/site/index.html|site/index.html|
 
-`$(pwd)`는 현재 작업 폴더의 **절대 경로**를 반환하므로, 반드시 프로젝트 루트에서 실행하면 `bind-site`의 위치를 명확히 지정할 수 있다. `source`는 호스트 Ubuntu의 실제 파일 폴더, `target`은 NGINX가 정적 파일을 읽는 컨테이너 경로이다. 이 경로를 정확하게 사용하고 파일 읽기 권한을 확보해야 설정을 재현할 수 있다.
+
+$(pwd)는 현재 작업 디렉터리의 절대경로를 반환한다.
+
+프로젝트 루트에서 실행하면 source에 /home/bwldns/codyssey/workstation-lab/bind-site와 같은 절대경로가 전달된다.
+
+Docker 바인드 마운트는 호스트의 특정 디렉터리와 컨테이너 내부 디렉터리를 연결하므로, 소스 경로를 명확히 지정하는 것이 중요하다.
+
+정리: 절대경로는 현재 위치와 관계없이 파일을 정확히 지정할 때 유용하며, 상대경로는 현재 작업 디렉터리를 기준으로 파일을 간단히 지정할 때 유용하다.
 
 **검증 순서:** (1) 변경 전 `curl`/브라우저 캡처 → (2) `bind-site/index.html` 수정 및 저장 → (3) **재빌드·재시작 없이** 동일 주소 요청 → (4) `docker inspect lab-bind --format '{{json .Mounts}}'`로 연결 경로 확인.
 
@@ -327,22 +340,32 @@ docker exec lab-volume2 cat /data/result.txt
 볼륨은 컨테이너와 별도로 데이터를 관리하지만, **볼륨 자체를 삭제하거나 Docker 데이터 저장소를 초기화하면 데이터가 사라질 수 있어** 중요한 데이터는 백업한다. 아래는 실습용 `lab-data` 볼륨을 `backup/`에 `tar.gz`로 저장하고, 별도의 `lab-restored` 볼륨에 복구하는 예시이다. 
 
 ```bash
-mkdir -p backup
-# 원본 볼륨을 읽기 전용으로 연결해 아카이브 생성
-docker run --rm -v lab-data:/data:ro -v "$(pwd)/backup":/backup alpine \
-  tar -czf /backup/lab-data.tar.gz -C /data .
-# 복구 볼륨은 원본과 별개로 생성
-docker volume create lab-restored
-docker run --rm -v lab-restored:/data -v "$(pwd)/backup":/backup:ro alpine \
-  tar -xzf /backup/lab-data.tar.gz -C /data
-# 복구 검증
-docker run --rm -v lab-restored:/data:ro ubuntu:24.04 cat /data/result.txt
+docker volume create persistence-test
+
+docker run -d --name persistence-container1 \
+  -v persistence-test:/data ubuntu:24.04 sleep infinity
+
+docker exec persistence-container1 \
+  sh -c 'echo "Volume persistence verified" > /data/test.txt'
+
+docker exec persistence-container1 cat /data/test.txt
+
+docker rm -f persistence-container1
+
+docker run -d --name persistence-container2 \
+  -v persistence-test:/data ubuntu:24.04 sleep infinity
+
+docker exec persistence-container2 cat /data/test.txt
+```
+검증결과
+```bash
+#컨테이너 삭제 전:
+Volume persistence verified
+#컨테이너 삭제 후:
+Volume persistence verified
 ```
 
-**참고:** 볼륨 백업·복구 명령은 추가 검증을 위한 예시이며, 해당 실행 결과는 첨부된 화면에 포함되지 않는다.
-
-**볼륨 삭제 전후 확인 방법 (평가 #8)**
-
+첫 번째 컨테이너를 삭제한 후에도 두 번째 컨테이너에서 같은 파일을 읽을 수 있었다. 이를 통해 Docker 볼륨의 데이터 영속성을 확인하였다.
 
 ## 11. Git / GitHub
 
@@ -370,7 +393,107 @@ git push -u origin main
 
 **주의:** `git init`과 `git remote add origin`은 최초 설정할 때만 사용한다. 이미 연결된 저장소는 수정 후 `git add README.md docs/`, `git commit -m "docs: improve README evidence"`, `git push` 순으로 갱신한다. 원격 변경이 있다면 먼저 충돌을 해결해야 하며 `git push --force`는 피한다.
 
-## 12. 트러블슈팅
+## 12. Docker compose 보너스 실습
+
+**실습 목적 및 사용 이유**
+Docker compose란?: 여러 개의 도커 컨테이너를 하나의 서비스 묶음으로 정의하고 한 번에 실행·관리할 수 있게 해주는 도구이다.
+
+Docker Compose를 사용하여 여러 컨테이너의 실행 설정을 하나의 YAML 파일로 관리하는 방법을 학습하였다.
+
+단일 NGINX 웹 서비스를 Compose로 실행하고, BusyBox 기반 보조 서비스인 inspector를 추가하여 컨테이너 간 네트워크 통신을 확인한다.
+
+또한 up, down, ps, logs 명령어를 사용하여 Compose 서비스의 운영 방법을 실습한다.
+
+**실습1. Docker compose 단일 컨테이너 실행**
+Compose 설정 파일: compose.yaml
+```bash
+name: workstation-compose
+
+services:
+  web:
+    build: .
+    image: lab-nginx:compose
+    ports:
+      - "127.0.0.1:8091:80"
+    restart: unless-stopped
+```
+services는 실행할 서비스들을 정의하는 영역이며, build는 Dockerfile을 사용한 이미지 빌드 설정이다.
+
+ports는 호스트 포트 8091과 컨테이너 포트 80을 연결한다.
+실행 명령어
+```bash
+docker compose config
+docker compose up -d --build
+docker compose ps
+curl -I http://localhost:8091
+```
+검증 결과
+```bash
+
+```
+**실습2. Docker Compose 멀티 컨테이너 실행**
+Compose 파일 수정: compose.yaml
+```bash
+name: workstation-compose
+
+services:
+  web:
+    build: .
+    image: lab-nginx:compose
+    ports:
+      - "127.0.0.1:8091:80"
+    restart: unless-stopped
+
+  inspector:
+    image: busybox:1.36
+    depends_on:
+      - web
+    command:
+      - sh
+      - -c
+      - "echo 'Inspector READY'; while true; do sleep 3600; done"
+```
+실행 명령어
+```bash
+docker compose config
+docker compose up -d --build
+docker compose ps
+```
+컨테이너 간 통신 확인
+```bash
+docker compose exec inspector wget -qO- http://web:80/
+docker compose exec inspector nslookup web
+```
+검증결과
+
+**네트워크 및 서비스**
+
+Docker Compose는 기본 네트워크를 생성하고 동일한 네트워크에 연결된 서비스가 서로 통신할 수 있도록 한다.
+```bash
+inspector
+    |
+    | http://web:80/
+    v
+Docker Compose 기본 네트워크
+    |
+    v
+web (NGINX)
+    |
+    v
+HTTP 응답
+```
+**Docker Compose 운영 명령어**
+| 명령어 | 기능 |
+|---|---|
+| docker compose up -d | 서비스 생성 및 백그라운드 실행 |
+| docker compose ps | 실행 중인 Compose 서비스 상태 확인 |
+| docker compose ps -a | 종료된 서비스까지 조회 |
+| docker compose logs | 서비스 로그 확인 |
+| docker compose logs -f web | 웹 서비스 로그 실시간 조회 |
+| docker compose down | 서비스 컨테이너와 프로젝트 네트워크 정리 |
+검증 결과
+
+## 13. 트러블슈팅
 
 아래는 Docker 실행 과정에서 다룬 대표적인 문제와 해결 절차다. 오류 상황은 각 항목의 스크린샷을 참고한다.
 
