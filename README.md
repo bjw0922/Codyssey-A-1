@@ -6,7 +6,7 @@
 
 Windows 10 환경에서 WSL2, Ubuntu, VS Code, Docker 및 Git을 활용하여 개발 워크스테이션을 구축하였다.
 
-Linux CLI를 통해 파일·디렉터리와 접근 권한을 관리하고, Docker를 이용하여 이미지 생성, 컨테이너 운영, NGINX 웹 서버 배포, 포트 매핑, 바인드 마운트, 볼륨 영속성 등을 실습하였다.
+Linux CLI를 통해 파일·디렉터리와 접근 권한을 관리하고, Docker를 이용하여 이미지 생성, 컨테이너 운영, NGINX 웹 서버 배포, 포트 매핑, 바인드 마운트, 볼륨 영속성, Docker compose 등을 실습하였다.
 
 마지막으로 Git을 이용해 프로젝트의 변경 이력을 기록하고 GitHub에 업로드하였다.
 
@@ -28,6 +28,7 @@ Linux CLI를 통해 파일·디렉터리와 접근 권한을 관리하고, Docke
 workstation-lab/
 ├── README.md                 # 실습 과정·명령어·결과 설명
 ├── Dockerfile                # NGINX 이미지 설정
+├── compose.yaml              # Compose 파일
 ├── .gitignore                # Git 추적 제외 설정
 ├── site/index.html           # 커스텀 NGINX 웹 페이지
 ├── bind-site/index.html      # 바인드 마운트 웹 페이지
@@ -36,8 +37,6 @@ workstation-lab/
 │   └── permission.txt
 └── docs/screenshots/         # 실습 단계별 스크린샷
 ```
-
-실행 파일과 실습 증거를 분리하여 README에서 단계별 결과를 쉽게 확인할 수 있도록 구성하였다.
 
 ### 실습 재현 전제 조건 (평가 #11)
 
@@ -68,6 +67,7 @@ rmdir temp-dir
 
 **실습 결과**
 ![Linux CLI 명령어 실습 1](docs/screenshots/1.%ED%84%B0%EB%AF%B8%EB%84%90%20%EA%B8%B0%EB%B3%B8%20%EC%A1%B0%EC%9E%91_1.PNG)
+
 ![Linux CLI 명령어 실습 2](docs/screenshots/1.%ED%84%B0%EB%AF%B8%EB%84%90%20%EA%B8%B0%EB%B3%B8%20%EC%A1%B0%EC%9E%91_2.PNG)
 
 파일 생성(`touch`), 복사(`cp`), 이름 변경(`mv`), 삭제(`rm`/`rmdir`) 명령으로 작업 디렉터리 내 파일 상태를 변경한다. `ls -la`와 `cat`으로 최종 상태를 확인한다.
@@ -164,7 +164,9 @@ docker stats --no-stream
 ![컨테이너 상태 및 리소스 확인](docs/screenshots/7.%20%EC%BB%A8%ED%85%8C%EC%9D%B4%EB%84%88%EC%9D%98%20%EC%83%81%ED%83%9C%20%EB%B0%8F%20%EC%9E%90%EC%9B%90%20%ED%99%95%EC%9D%B8.PNG)
 
 ## exec / attach 의 의미와 비교
-|---|---|---|
+
+|명령어|기능|특징|
+|:---|:---|:---|
 | exec | 새 프로세스를 만들어 명령을 실행 | 셸이나 명령을 종료해도 컨테이너는 계속 실행 |
 | attach | 실행 중인 컨테이너의 기존 메인 프로세스 표준 입출력에 직접 연결 | exit 등으로 연결을 끊거나 주 프로세스가 종료되면 컨테이너도 함께 멈출 수 있음 |
 
@@ -180,8 +182,8 @@ LABEL description="WSL2 Docker workstation assignment"
 COPY site/ /usr/share/nginx/html/
 EXPOSE 80
 ```
-
 | FROM nginx:1.27-alpine | nginx 웹 서버의 1.27 버전 중 가벼운 Alpine Linux 기반 이미지를 지정 |
+|:---|:---|
 | LABEL description="WSL2 Docker workstation assignment" | 이미지에 설명 같은 메타데이터를 키-값(key=value) 형태로 출력 |
 | COPY site/ /usr/share/nginx/html/ | site/ 디렉터리 안 파일들을 이미지 내부의 /usr/share/nginx/html/ 경로로 복사 |
 | EXPOSE 80 | 컨테이너 내부 프로세스가 80번 포트를 사용한다는 의도를 문서화(메타데이터 기록) |
@@ -364,7 +366,7 @@ Volume persistence verified
 #컨테이너 삭제 후:
 Volume persistence verified
 ```
-
+![alt text](<docs/screenshots/12. 볼륨 영속성 검증.PNG>)
 첫 번째 컨테이너를 삭제한 후에도 두 번째 컨테이너에서 같은 파일을 읽을 수 있었다. 이를 통해 Docker 볼륨의 데이터 영속성을 확인하였다.
 
 ## 11. Git / GitHub
@@ -417,6 +419,7 @@ services:
       - "127.0.0.1:8091:80"
     restart: unless-stopped
 ```
+![alt text](<docs/screenshots/16. 단일 compose yml 내용.PNG>)
 services는 실행할 서비스들을 정의하는 영역이며, build는 Dockerfile을 사용한 이미지 빌드 설정이다.
 
 ports는 호스트 포트 8091과 컨테이너 포트 80을 연결한다.
@@ -428,9 +431,8 @@ docker compose ps
 curl -I http://localhost:8091
 ```
 검증 결과
-```bash
-
-```
+![alt text](<docs/screenshots/16. docker compose 8091포트 웹페이지 실행.PNG>)
+![alt text](<docs/screenshots/16. docker compose 단일 웹 서버 실행.PNG>)
 **실습2. Docker Compose 멀티 컨테이너 실행**
 Compose 파일 수정: compose.yaml
 ```bash
@@ -459,13 +461,14 @@ docker compose config
 docker compose up -d --build
 docker compose ps
 ```
+![alt text](<docs/screenshots/17. 멀티 컨테이너 실행 상태.PNG>)
 컨테이너 간 통신 확인
 ```bash
 docker compose exec inspector wget -qO- http://web:80/
 docker compose exec inspector nslookup web
 ```
 검증결과
-
+![alt text](<docs/screenshots/17. 컨테이너 간 네트워크 통신.PNG>)
 **네트워크 및 서비스**
 
 Docker Compose는 기본 네트워크를 생성하고 동일한 네트워크에 연결된 서비스가 서로 통신할 수 있도록 한다.
@@ -492,7 +495,8 @@ HTTP 응답
 | docker compose logs -f web | 웹 서비스 로그 실시간 조회 |
 | docker compose down | 서비스 컨테이너와 프로젝트 네트워크 정리 |
 검증 결과
-
+![alt text](<docs/screenshots/17. 컴포즈 로그 웹, 인스트랙터.PNG>)
+![alt text](<docs/screenshots/17. 컴포즈 Down,Up.PNG>)
 ## 13. 트러블슈팅
 
 아래는 Docker 실행 과정에서 다룬 대표적인 문제와 해결 절차다. 오류 상황은 각 항목의 스크린샷을 참고한다.
